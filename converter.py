@@ -27,6 +27,7 @@ def convert_json_to_parquet_streaming(input_file, output_file):
                     df = pd.DataFrame(records)
                     table = pa.Table.from_pandas(df)
                     # Write to a single Parquet file
+                    print(f"Written {len(records)}")
                     pq.write_table(table, output_file, compression='snappy', append=True)
                     records = []  # Clear the list for the next batch
 
@@ -34,6 +35,7 @@ def convert_json_to_parquet_streaming(input_file, output_file):
             if records:
                 df = pd.DataFrame(records)
                 table = pa.Table.from_pandas(df)
+                print("Writing dataframe to parquet...")
                 pq.write_table(table, output_file, compression='snappy', append=True)
 
         print("Conversion completed successfully!")
