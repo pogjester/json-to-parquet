@@ -12,7 +12,7 @@ def convert_json_to_parquet(input_file, output_file):
     try:
         # Process JSON data in chunks
         print(f"Loading JSON file in chunks: {input_file}")
-        chunks = pd.read_json(input_file, chunksize=10000)  # Adjust chunksize as needed
+        chunks = pd.read_json(input_file, lines=True, chunksize=10000)  # Adjust chunksize as needed
 
         # Initialize an empty list to store DataFrame chunks
         df_list = []
