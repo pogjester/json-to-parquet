@@ -22,9 +22,9 @@ def convert_json_to_parquet_streaming(input_file, output_file):
             record_count = 0
             batch_count = 0
 
-            print("Starting to parse JSON file incrementally...")
-            # Use ijson to parse the JSON file incrementally
-            for record in ijson.items(f, 'item'):
+            print("Starting to parse 'reporting_structure' array...")
+            # Use ijson to parse the "reporting_structure" array incrementally
+            for record in ijson.items(f, 'reporting_structure.item'):
                 print(f"Parsing record {record_count + 1}...")
                 # Flatten the nested JSON structure
                 try:
