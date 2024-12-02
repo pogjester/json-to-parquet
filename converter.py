@@ -1,41 +1,50 @@
+import ijson
 import pandas as pd
+import pyarrow as pa
+import pyarrow.parquet as pq
 import argparse
 
-def convert_json_to_parquet(input_file, output_file):
+def convert_json_to_parquet_streaming(input_file, output_file):
     """
-    Converts a JSON file to a Parquet file.
+    Converts a large JSON file to a Parquet file using streaming.
 
     Args:
         input_file (str): Path to the input JSON file.
         output_file (str): Path to the output Parquet file.
     """
     try:
-        # Process JSON data in chunks
-        print(f"Loading JSON file in chunks: {input_file}")
-        chunks = pd.read_json(input_file, lines=True, chunksize=10000)  # Adjust chunksize as needed
+        # Open the input JSON file
+        with open(input_file, 'r') as f:
+            # Initialize a list to store JSON objects
+            records = []
 
-        # Initialize an empty list to store DataFrame chunks
-        df_list = []
+            # Use ijson to parse the JSON file incrementally
+            for record in ijson.items(f, 'item'):
+                records.append(record)
 
-        for chunk in chunks:
-            df_list.append(chunk)
+                # Process in batches to avoid memory issues
+                if len(records) >= 10000:  # Adjust batch size as needed
+                    df = pd.DataFrame(records)
+                    table = pa.Table.from_pandas(df)
+                    pq.write_to_dataset(table, root_path=output_file, compression='snappy')
+                    records = []  # Clear the list for the next batch
 
-        # Concatenate all chunks into a single DataFrame
-        df = pd.concat(df_list, ignore_index=True)
+            # Write any remaining records
+            if records:
+                df = pd.DataFrame(records)
+                table = pa.Table.from_pandas(df)
+                pq.write_to_dataset(table, root_path=output_file, compression='snappy')
 
-        # Convert DataFrame to Parquet
-        print(f"Converting to Parquet file: {output_file}")
-        df.to_parquet(output_file, engine='pyarrow', compression='snappy')
         print("Conversion completed successfully!")
     except Exception as e:
         print(f"An error occurred: {e}")
 
 if __name__ == "__main__":
     # Command-line argument parsing
-    parser = argparse.ArgumentParser(description="Convert JSON to Parquet")
+    parser = argparse.ArgumentParser(description="Convert JSON to Parquet using streaming")
     parser.add_argument("input_file", help="Path to the input JSON file")
     parser.add_argument("output_file", help="Path to the output Parquet file")
     args = parser.parse_args()
 
     # Run the conversion
-    convert_json_to_parquet(args.input_file, args.output_file)
+    convert_json_to_parquet_streaming(args.input_file, args.output_file)
