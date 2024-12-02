@@ -26,14 +26,15 @@ def convert_json_to_parquet_streaming(input_file, output_file):
                 if len(records) >= 10000:  # Adjust batch size as needed
                     df = pd.DataFrame(records)
                     table = pa.Table.from_pandas(df)
-                    pq.write_to_dataset(table, root_path=output_file, compression='snappy')
+                    # Write to a single Parquet file
+                    pq.write_table(table, output_file, compression='snappy', append=True)
                     records = []  # Clear the list for the next batch
 
             # Write any remaining records
             if records:
                 df = pd.DataFrame(records)
                 table = pa.Table.from_pandas(df)
-                pq.write_to_dataset(table, root_path=output_file, compression='snappy')
+                pq.write_table(table, output_file, compression='snappy', append=True)
 
         print("Conversion completed successfully!")
     except Exception as e:
