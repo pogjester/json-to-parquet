@@ -10,9 +10,18 @@ def convert_json_to_parquet(input_file, output_file):
         output_file (str): Path to the output Parquet file.
     """
     try:
-        # Load JSON data into a DataFrame
-        print(f"Loading JSON file: {input_file}")
-        df = pd.read_json(input_file, lines=True)  # Use `lines=True` for newline-delimited JSON
+        # Process JSON data in chunks
+        print(f"Loading JSON file in chunks: {input_file}")
+        chunks = pd.read_json(input_file, lines=True, chunksize=10000)  # Adjust chunksize as needed
+
+        # Initialize an empty list to store DataFrame chunks
+        df_list = []
+
+        for chunk in chunks:
+            df_list.append(chunk)
+
+        # Concatenate all chunks into a single DataFrame
+        df = pd.concat(df_list, ignore_index=True)
 
         # Convert DataFrame to Parquet
         print(f"Converting to Parquet file: {output_file}")
